@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MON-TUTTI Data Table</title>
+    <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .status-legend {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .status-item {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        #monTuttiTable {
+            width: 100%;
+            background-color: white;
+        }
+        .filters {
+            margin-bottom: 20px;
+        }
+        .filter-group {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        .date-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MON-TUTTI Monitoring Data</h1>
+        
+        <div class="status-legend">
+            <h3>Status Legend:</h3>
+            <div class="status-item">❌ - Impianto Spento</div>
+            <div class="status-item">🌐 - Problema comunicazione</div>
+            <div class="status-item">🟪 - Impianto funziona con problemi</div>
+            <div class="status-item">🔵 - Dispositivi con problemi</div>
+            <div class="status-item">🚫 - Dispositivo spento</div>
+            <div class="status-item">⚡ - Isolamento Inverter</div>
+            <div class="status-item">❓ - Non vede sul portale Monitoraggio</div>
+            <div class="status-item">✅ - Funziona</div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="deviceFilter">Device:</label>
+                <select id="deviceFilter">
+                    <option value="">All Devices</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                </select>
+            </div>
+            <div class="filter-group date-range">
+                <label>Date Range:</label>
+                <input type="date" id="startDate">
+                <span>to</span>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+
+        <table id="monTuttiTable" class="display responsive nowrap">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Device</th>
+                    <th>Problems</th>
+                    <th>Internal Notification</th>
+                    <th>Customer Notification</th>
+                    <th>Solution</th>
+                    <th>Internal Responsible</th>
+                    <th>Action</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
