@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Data Display</title>
+    <!-- Add these to the <head> section -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/datetime/1.5.1/css/dataTables.dateTime.min.css">
+    <!-- Include Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .station-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .station-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 200px;
+        }
+        .station-card:hover {
+            background-color: #f0f0f0;
+        }
+        .back-button {
+            margin-bottom: 20px;
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+        .data-section {
+            margin-bottom: 20px;
+        }
+        .data-section h2 {
+            margin-bottom: 10px;
+        }
+        .data-item {
+            margin-bottom: 10px;
+        }
+        .filter-buttons {
+            margin-bottom: 10px;
+        }
+        .filter-buttons button {
+            margin-right: 10px;
+        }
+        .date-range-filter {
+            margin-bottom: 10px;
+        }
+        .date-range-filter input {
+            margin-right: 10px;
+        }
+        .column-filters {
+            margin-bottom: 10px;
+        }
+        .column-filters input {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .graph-container {
+            margin-top: 20px;
+        }
+        .toggle-buttons {
+            margin-bottom: 10px;
+        }
+        .toggle-buttons button {
+            margin-right: 10px;
+        }
+        .graph-section {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .graph-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .filter {
+            margin-bottom: 10px;
+        }
+        .filter label {
+            margin-right: 10px;
+        }
+        .filter select {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .graph-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .st-tutti-container {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        }
+
+        .status-today {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-today .emoji {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .status-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 0px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .legend-item .emoji {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .weekly-status {
+            margin-bottom: 20px;
+        }
+
+        .day-status {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .yearly-stats .stat-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .progress-bar {
+            flex-grow: 1;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+
+        .progress {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s ease;
+        }
+
+        .status-count {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        /* Add these styles to your existing CSS */
+        .status-row {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            scroll-behavior: smooth; /* Smooth scrolling */
+            -webkit-overflow-scrolling: touch; /* For iOS */
+            scrollbar-width: thin; /* For Firefox */
+            position: relative;
+        }
+
+        /* Styling the scrollbar */
+        .status-row::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .status-row::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .status-row::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .status-row::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Navigation buttons */
+        .status-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .status-nav-btn.prev {
+            left: 0;
+        }
+
+        .status-nav-btn.next {
+            right: 0;
+        }
+
+        .status-nav-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .status-container {
+            position: relative;
+            padding: 0 35px;
+        }
+
+
+        .status-card {
+            min-width: 150px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status-card.today {
+            border: 2px solid #007bff;
+            background: #fff;
+        }
+
+        .status-card .emoji {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .status-card .date {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .status-card .description {
+            font-size: 0.8em;
+            color: #333;
+        }
+
+        .status-section {
+            margin-bottom: 20px;
+        }
+
+        .status-section h3 {
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .device-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .device-section {
+            margin-bottom: 30px;
+        }
+
+        .device-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .device-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Change to single column */
+            gap: 30px; /* Increased gap */
+        }
+
+        .device-card {
+            background: #fff;
+            padding: 20px; /* Increased padding */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%; /* Ensure full width */
+        }
+
+        .device-info {
+            margin-bottom: 15px;
+        }
+
+        .device-chart {
+            width: 100%;
+            height: 500px; /* Increased height */
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .device-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .device-ribbon {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .device-ribbon:hover {
+            background: #e9ecef;
+        }
+
+        .device-ribbon h3 {
+            margin: 0;
+        }
+
+        .device-ribbon .toggle-icon {
+            font-size: 24px;
+            transition: transform 0.3s;
+        }
+
+        .device-ribbon.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .device-content {
+            display: none;
+            padding: 20px 0;
+        }
+
+        .device-content.active {
+            display: block;
+        }
+
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns */
+            gap: 20px;
+        }
+
+        .device-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .device-chart {
+            width: 100%;
+            height: 400px;
+            margin-top: 15px;
+        }
+
+        /* For mobile responsiveness */
+        @media (max-width: 1200px) {
+            .device-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .device-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-section {
+            margin-bottom: 0px;
+        }
+
+        @media (max-width: 1200px) {
+            .project-management-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .project-management-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .general-info {
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-label {
+            display: block;
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        /* Project Management specific styles */
+        .project-management-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .energy-graphs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .energy-graphs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .graph-container {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-left: 10px;
+        }
+
+        .info-value {
+            display: block;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            color: #333;
+            font-size: 0.95em;
+            min-height: 18px;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .info-section-title:hover {
+            background: #e9ecef;
+        }
+
+        .info-section-title::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s;
+        }
+
+        .info-section-content.collapsed {
+            max-height: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .info-section-content {
+            display: block;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 1000px; /* Adjust based on your content */
+        }
+
+        .info-section-title.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+
+        .info-section-title {
+            font-size: 1.1em;
+            color: #2c3e50;
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+            border: 1px solid #e9ecef;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .info-field {
+            margin-bottom: 10px;
+        }
+
+        .status-value {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+
+
+        .status-high {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        .contact-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .path-box {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .status-normal {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .path-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 8px 12px;
+        }
+
+        .copy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background-color 0.2s;
+        }
+        .project-links {
+            margin-top: 15px;
+        }
+
+        .copy-btn:hover {
+            background: #0056b3;
+        }
+
+        .contact-grid {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .project-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .status-filter {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .status-filter button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .status-filter button:hover {
+            background: #0056b3;
+        }
+
+        .status-filter button.active {
+            background: #28a745;
+        }
+
+        .date-range-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-range-inputs input {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #0056b3;
+        }
+
+        .filter-btn.active {
+            background: #28a745;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="main-page">
+        <h1>Stations</h1>
+        <div class="station-list" id="station-list"></div>
+    </div>
+
+    <div id="station-details" style="display: none;">
+        <div class="back-button" onclick="showMainPage()">← Back to Stations</div>
+        <h1 id="station-name"></h1>
+        <div id="station-data"></div>
+
+        <!-- Table for MON-TUTTI data -->
+        <div id="mon-tutti-section" style="display: none;">
+            <h2>MON-TUTTI Data</h2>
+
+            <!-- Filter Buttons -->
+            <div class="filter-buttons">
+                <button onclick="filterToday()">Today</button>
+                <button onclick="filterThisMonth()">Month</button>
+                <button onclick="filterThisYear()">Anno</button>
+                <button onclick="filterAll()">Tutti</button>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="date-range-filter">
+                <input type="date" id="start-date" placeholder="Start Date">
+                <input type="date" id="end-date" placeholder="End Date">
+                <button onclick="filterByDateRange()">Find</button>
+            </div>
+
+            <!-- Column Filters -->
+            <div class="column-filters">
+                <input type="text" id="filter-date" placeholder="Filter by Date">
+                <input type="text" id="filter-stato" placeholder="Filter by Stato">
+                <input type="text" id="filter-device" placeholder="Filter by Device">
+                <input type="text" id="filter-responsabile" placeholder="Filter by Responsabile Interno">
+                <input type="text" id="filter-segnalazione-interno" placeholder="Filter by Segnalazione Interno">
+                <input type="text" id="filter-segnalazione-cliente" placeholder="Filter by Segnalazione Cliente">
+                <input type="text" id="filter-soluzione" placeholder="Filter by Soluzione">
+                <input type="text" id="filter-azione" placeholder="Filter by Azione">
+                <button onclick="applyColumnFilters()">Apply Filters</button>
+            </div>
+
+            <table id="mon-tutti-table" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Stato</th>
+                        <th>Device</th>
+                        <th>Responsabile Interno</th>
+                        <th>Segnalazione Interno</th>
+                        <th>Segnalazione Cliente</th>
+                        <th>Soluzione</th>
+                        <th>Azione</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Graph for CC-TUTTI data -->
+        <div id="cc-tutti-section" style="display: none;">
+            <h2>CC-TUTTI Data</h2>
+
+            <!-- Date Range Filter for Graph -->
+            <div class="date-range-filter">
+                <input type="date" id="graph-start-date" placeholder="Start Date">
+                <input type="date" id="graph-end-date" placeholder="End Date">
+                <button onclick="updateGraph()">Update Graph</button>
+            </div>
+
+            <!-- Toggle Buttons for Graph -->
+            <div class="toggle-buttons">
+                <button onclick="toggleCurve('yield_imp')">Toggle Yield_KWh/Kwp_imp</button>
+                <button onclick="toggleCurve('yield_giorno')">Toggle Yield_KWh/Kwp_giorno</button>
+                <button onclick="toggleCurve('potenza_peak')">Toggle Potenza_peak_KWp_giorno</button>
+                <button onclick="toggleCurve('energia_kwh')">Toggle Energia_kWh_giorno</button>
+                <button onclick="toggleCurve('potenza_peak_kwp_installata')">Toggle Potenza_peak_KWp_giorno/kwp_installata</button>
+            </div>
+  
+            <!-- Graph Container -->
+            <div id="graph-container" class="graph-container"></div>
+
+            <!-- New Graphs Section -->
+            <div class="graph-row">
+                <!-- Monthly Graph -->
+                <div class="graph-container">
+                    <h2>Monthly Energy (kWh)</h2>
+                    <div class="filter">
+                        <label for="month-select">Select Month:</label>
+                        <select id="month-select" onchange="updateMonthlyGraph()">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                        <label for="year-select-month">Select Year:</label>
+                        <select id="year-select-month" onchange="updateMonthlyGraph()">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div id="monthly-graph"></div>
+                </div>
+            </div>
+
+            <div class="graph-row">
+                <!-- Yearly Graph -->
+                <div class="graph-container">
+                    <h2>Yearly Energy (kWh)</h2>
+                    <div class="filter">
+                        <label for="year-select-year">Select Year:</label>
+                        <select id="year-select-year" onchange="updateYearlyGraph()">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div id="yearly-graph"></div>
+                </div>
+
+                <!-- All-Year Sum Graph -->
+                <div class="graph-container">
+                    <h2>All-Year Sum Energy (kWh)</h2>
+                    <div id="all-year-sum-graph"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Replace with your GitHub JSON file URL
+        const jsonUrl = 'https://bittumon.github.io/rendriel/TUTTI-plant_data.json';
+        
+        let stationData;
+        let dataTable;
+        let ccTuttiData;
+        let stationInfo;
+        let graphData = [];
+        let currentStTuttiData = null;  // Add this line
+        let visibleCurves = {
+            yield_imp: true,
+            yield_giorno: true,
+            potenza_peak: true,
+            energia_kwh: true,
+            potenza_peak_kwp_installata: true
+        };
+
+        // At the top with your other global variables, add this:
+        let ccTuttiVisibility = {
+            'Yield_KWh/Kwp_imp': true,
+            'Yield_KWh/Kwp_giorno': true,
+            'Potenza_peak_KWp_giorno': true,
+            'Energia_kWh_giorno': true,
+            'Potenza_peak_KWp_giorno/kwp_installata': true
+        };
+
+        // ST-TUTTI Status mapping and utilities
+        const statusMap = {
+            '❌': 'Impianto Spento',
+            '🌐': 'Problema comunicazione',
+            '🟪': 'Impianto funziona con problemi',
+            '🔵': 'Dispositivi con problemi',
+            '🚫': 'Dispositivo spento',
+            '⚡': 'Isolamento Inverter',
+            '❓': 'Non vede sul portale Monitoraggio',
+            '✅': 'Funziona'
+        };
+
+        function getStatusCounts(stTuttiData) {
+            const counts = {};
+            Object.values(stTuttiData).forEach(status => {
+                counts[status] = (counts[status] || 0) + 1;
+            });
+            return counts;
+        }
+
+        function getLast7DaysStatus(stTuttiData) {
+            const dates = Object.keys(stTuttiData).sort().reverse().slice(0, 7);
+            return dates.map(date => ({
+                date,
+                status: stTuttiData[date],
+                count: Object.values(stTuttiData).filter(s => s === stTuttiData[date]).length
+            }));
+        }
+
+        function getTodayStatus(stTuttiData) {
+            const today = moment().format('DD/MM/YYYY');
+            return {
+                emoji: stTuttiData[today] || '✅',
+                description: statusMap[stTuttiData[today]] || statusMap['✅'],
+                date: today
+            };
+        }
+
+        function createStatusDistributionContent(data, startDate = null, endDate = null) {
+            let filteredData = { ...data };
+            
+            if (startDate && endDate) {
+                filteredData = Object.entries(data).reduce((acc, [date, status]) => {
+                    // Change this line - use the date from the data instead of getCurrentTimestamp
+                    const currentDate = moment(date, 'DD/MM/YYYY');
+                    if (currentDate.isBetween(startDate, endDate, null, '[]')) {
+                        acc[date] = status;
+                    }
+                    return acc;
+                }, {});
+            }
+
+            const counts = getStatusCounts(filteredData);
+            const totalDays = Object.keys(filteredData).length;
+
+            if (totalDays === 0) {
+                return '<div class="stat-item">No data available for selected date range</div>';
+            }
+
+            return Object.entries(counts).map(([status, count]) => `
+                <div class="stat-item">
+                    <span class="emoji">${status}</span>
+                    <span>${statusMap[status] || 'Unknown'}</span>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: ${(count / totalDays) * 100}%"></div>
+                    </div>
+                    <span class="status-count">${count}</span>
+                </div>
+            `).join('');
+        }
+
+
+        
+
+        // Add this function at the start of your JavaScript
+        function getCurrentTimestamp() {
+            return moment().format('YYYY-MM-DD HH:mm:ss');
+        }
+
+
+        // Fetch the JSON data
+        fetch(jsonUrl)
+            .then(response => response.json())
+            .then(data => {
+                stationData = data.data_first_set;
+                displayStations();
+            })
+            .catch(error => console.error('Error fetching JSON:', error));
+
+        // Display the list of stations
+        function displayStations() {
+            const stationList = document.getElementById('station-list');
+            stationData.forEach((station, index) => {
+                const stationKey = Object.keys(station)[0];
+                const stationInfo = station[stationKey];
+                const card = document.createElement('div');
+                card.className = 'station-card';
+                card.innerHTML = `<strong>Station ${stationKey}</strong><br>${stationInfo.IMPIANTI}`;
+                card.addEventListener('click', () => showStationDetails(index));
+                stationList.appendChild(card);
+            });
+        }
+
+        
+
+        // Show details for a specific station
+        function showStationDetails(index) {
+            const station = stationData[index];
+            const stationKey = Object.keys(station)[0];
+            stationInfo = station[stationKey];
+
+            document.getElementById('main-page').style.display = 'none';
+            document.getElementById('station-details').style.display = 'block';
+            document.getElementById('station-name').textContent = `Station ${stationKey}: ${stationInfo.IMPIANTI}`;
+            
+            const stationDataContainer = document.getElementById('station-data');
+            stationDataContainer.innerHTML = '';
+
+            // 1. Display General Info first
+            addDataSection(stationDataContainer, 'General Info', stationInfo, [
+                'Codice Stazione', 'STATO', 'Urgenza', 'oggi', 'Potenza Impianto', 'Anno _Entrata', 'CTR',
+                'Nome_Cliente', 'Inizio_Contratto', 'Fine_Contratto', 'Riferimento', 'Email', 'Cell', 'Indrizzo', 'PM',
+                'Promessa_entro', 'Garanzia', 'Cartella progetto', 'Portale_Monitoraggio'
+            ]);
+
+            // 2. Display ST-TUTTI Status section
+            if (stationInfo['ST-TUTTI']) {
+                const stTuttiSection = document.createElement('div');
+                stTuttiSection.className = 'st-tutti-container';
+                stTuttiSection.innerHTML = '<h2>ST-TUTTI Status</h2>';
+                renderStTuttiDashboard(stationInfo['ST-TUTTI'], stTuttiSection);
+                stationDataContainer.appendChild(stTuttiSection);
+            }
+
+            // 3. Display MON-TUTTI data section
+            if (stationInfo['MON-TUTTI']) {
+                document.getElementById('mon-tutti-section').style.display = 'block';
+                populateMonTuttiTable(stationInfo['MON-TUTTI']);
+            } else {
+                document.getElementById('mon-tutti-section').style.display = 'none';
+            }
+
+            // 4. Monthly Energy Analysis section
+            if (stationInfo['Energia_kWh_mese-TUTTI']) {
+                const monthlyEnergySection = document.createElement('div');
+                monthlyEnergySection.className = 'data-section';
+                monthlyEnergySection.innerHTML = `
+                    <h2>Monthly Energy Analysis</h2>
+                    
+                    <div class="filter">
+                        <label for="monthly-analysis-year">Select Year:</label>
+                        <select id="monthly-analysis-year" onchange="updateAllMonthlyGraphs()">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="energy-graphs-grid">
+                        <div class="graph-container">
+                            <h3>Energy Analysis</h3>
+                            <div id="energy-analysis-graph"></div>
+                        </div>
+                        
+                        <div class="graph-container">
+                            <h3>Performance Ratio</h3>
+                            <div id="performance-ratio-graph"></div>
+                        </div>
+                        
+                        <div class="graph-container">
+                            <h3>Peak Power Monthly</h3>
+                            <div id="peak-power-graph"></div>
+                        </div>
+                        
+                        <div class="graph-container">
+                            <h3>Yield Analysis</h3>
+                            <div id="yield-analysis-graph"></div>
+                        </div>
+                    </div>
+                `;
+                stationDataContainer.appendChild(monthlyEnergySection);
+                initializeMonthlyAnalysis(stationInfo);
+            }
+
+            // 5. Display CC-TUTTI data in a graph
+            if (stationInfo['CC-TUTTI']) {
+                document.getElementById('cc-tutti-section').style.display = 'block';
+                ccTuttiData = stationInfo['CC-TUTTI'];
+                prepareGraphData(stationInfo['Potenza Impianto']);
+                updateGraph();
+                prepareData();
+                populateFilters();
+                updateMonthlyGraph();
+                updateYearlyGraph();
+                renderAllYearSumGraph();
+            } else {
+                document.getElementById('cc-tutti-section').style.display = 'none';
+            }
+
+            // 6. Display Device Information
+            if (stationInfo['Tipo dispositivi']) {
+                const deviceSection = document.createElement('div');
+                deviceSection.className = 'device-container';
+                renderDeviceDashboard(stationInfo['Tipo dispositivi'], deviceSection);
+                stationDataContainer.appendChild(deviceSection);
+            }
+        }
+
+        function initializeMonthlyAnalysis(data) {
+            if (!data || !data['Energia_kWh_mese-TUTTI']) {
+                console.error('Invalid data for monthly analysis');
+                return;
+            }
+
+            const yearSelect = document.getElementById('monthly-analysis-year');
+            if (!yearSelect) {
+                console.error('Year select element not found');
+                return;
+            }
+
+            try {
+                const years = [...new Set(
+                    Object.keys(data['Energia_kWh_mese-TUTTI'])
+                        .map(month => month.split('-')[1])
+                )].sort();
+
+                yearSelect.innerHTML = years.map(year => 
+                    `<option value="${year}">${year}</option>`
+                ).join('');
+
+                if (years.length > 0) {
+                    yearSelect.value = years[0];
+                    setTimeout(() => updateAllMonthlyGraphs(), 0);
+                }
+            } catch (error) {
+                console.error('Error in initializeMonthlyAnalysis:', error);
+            }
+        }
+
+        function updateAllMonthlyGraphs() {
+            if (!stationInfo || !stationInfo['Energia_kWh_mese-TUTTI']) {
+                console.error('Station info not available for graphs');
+                return;
+            }
+
+            try {
+                const selectedYear = document.getElementById('monthly-analysis-year').value;
+                
+                const months = Object.keys(stationInfo['Energia_kWh_mese-TUTTI'])
+                    .filter(month => month.split('-')[1] === selectedYear)
+                    .sort((a, b) => {
+                        const [monthA] = a.split('-');
+                        const [monthB] = b.split('-');
+                        return parseInt(monthA) - parseInt(monthB);
+                    });
+
+                if (months.length === 0) {
+                    console.warn('No data available for selected year');
+                    return;
+                }
+
+                updateEnergyAnalysisGraph(months);
+                updatePerformanceRatioGraph(months);
+                updatePeakPowerGraph(months);
+                updateYieldAnalysisGraph(months);
+            } catch (error) {
+                console.error('Error in updateAllMonthlyGraphs:', error);
+            }
+        }
+
+        function updateEnergyAnalysisGraph(months) {
+            const traces = [
+                {
+                    name: 'Actual Energy',
+                    type: 'bar',
+                    x: months,
+                    y: months.map(m => stationInfo['Energia_kWh_mese-TUTTI'][m])
+                },
+                {
+                    name: 'PVGIS Energy',
+                    type: 'bar',
+                    x: months,
+                    y: months.map(m => stationInfo['Energia_kWh_mese_pvgis-TUTTI'][m])
+                },
+                {
+                    name: 'Theoretical Energy',
+                    type: 'bar',
+                    x: months,
+                    y: months.map(m => stationInfo['Energia mese teoretico sensore-TUTTI'][m])
+                }
+            ];
+
+            const layout = {
+                title: 'Monthly Energy Analysis',
+                barmode: 'group',
+                xaxis: { title: 'Month' },
+                yaxis: { title: 'Energy (kWh)' },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 }
+            };
+
+            Plotly.newPlot('energy-analysis-graph', traces, layout, {responsive: true});
+        }
+
+        function updatePerformanceRatioGraph(months) {
+            const trace = {
+                name: 'Performance Ratio',
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: months,
+                y: months.map(m => stationInfo['PR(se)-TUTTI'][m])
+            };
+
+            const layout = {
+                title: 'Performance Ratio',
+                xaxis: { title: 'Month' },
+                yaxis: { title: 'PR' }
+            };
+
+            Plotly.newPlot('performance-ratio-graph', [trace], layout, {responsive: true});
+        }
+
+        function updatePeakPowerGraph(months) {
+            const potenzaImpianto = stationInfo['Potenza Impianto'];
+            const traces = [
+                {
+                    name: 'Peak Power',
+                    type: 'bar',
+                    x: months,
+                    y: months.map(m => stationInfo['Potenza_peak_KWp_mese-TUTTI'][m])
+                },
+                {
+                    name: 'Peak Power/Installed Power',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    x: months,
+                    y: months.map(m => stationInfo['Potenza_peak_KWp_mese-TUTTI'][m] / potenzaImpianto),
+                    yaxis: 'y2'
+                }
+            ];
+
+            const layout = {
+                title: 'Peak Power Monthly',
+                xaxis: { title: 'Month' },
+                yaxis: { title: 'Peak Power (kWp)' },
+                yaxis2: {
+                    title: 'Power Ratio',
+                    overlaying: 'y',
+                    side: 'right'
+                },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 }
+            };
+
+            Plotly.newPlot('peak-power-graph', traces, layout, {responsive: true});
+        }
+
+        function updateYieldAnalysisGraph(months) {
+            const traces = [
+                {
+                    name: 'kWh/kWp',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    x: months,
+                    y: months.map(m => stationInfo['Kwh/Kwp_mese-TUTTI'][m])
+                },
+                {
+                    name: 'Yield',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    x: months,
+                    y: months.map(m => stationInfo['Yield_KWh/Kw_imp-TUTTI'][m])
+                }
+            ];
+
+            const layout = {
+                title: 'Yield Analysis',
+                xaxis: { title: 'Month' },
+                yaxis: { title: 'Yield (kWh/kWp)' },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 }
+            };
+
+            Plotly.newPlot('yield-analysis-graph', traces, layout, {responsive: true});
+        }
+
+        // Add a data section to the station details
+        // Update the addDataSection function to initialize collapsible sections
+        function addDataSection(container, title, data, keys = null) {
+            const section = document.createElement('div');
+            section.className = 'data-section';
+            section.innerHTML = `<h2>${title}</h2>`;
+            
+            if (title === 'General Info') {
+                section.innerHTML += formatGeneralInfo(data);
+                container.appendChild(section);
+                initializeCollapsibleSections();
+            } else if (keys) {
+                keys.forEach(key => {
+                    if (data[key] !== undefined) {
+                        section.innerHTML += `<div class="data-item"><strong>${key}:</strong> ${data[key]}</div>`;
+                    }
+                });
+                container.appendChild(section);
+            } else {
+                section.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                container.appendChild(section);
+            }
+        }
+
+        // Add this JavaScript to handle the collapsible sections
+        function initializeCollapsibleSections() {
+            document.querySelectorAll('.info-section-title').forEach(title => {
+                title.addEventListener('click', () => {
+                    const content = title.nextElementSibling;
+                    title.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                });
+            });
+        }
+
+        // Add this function to handle copying to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // You could add a temporary tooltip or notification here
+                alert('Path copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        // Show the main page
+        function showMainPage() {
+            document.getElementById('main-page').style.display = 'block';
+            document.getElementById('station-details').style.display = 'none';
+        }
+
+        // Populate the MON-TUTTI table
+        function populateMonTuttiTable(monTuttiData) {
+            const tableBody = document.querySelector('#mon-tutti-table tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            // Iterate through devices (e.g., DISP 1, INV A, etc.)
+            for (const [device, dates] of Object.entries(monTuttiData)) {
+                // Iterate through dates for each device
+                for (const [date, details] of Object.entries(dates)) {
+                    const row = document.createElement('tr');
+                    // Convert date to YYYY-MM-DD format for sorting and filtering
+                    const formattedDate = moment(date, 'DD/MM/YYYY').format('YYYY-MM-DD');
+                    row.innerHTML = `
+                        <td data-order="${formattedDate}">${date}</td>
+                        <td>${details.stato}</td>
+                        <td>${device}</td>
+                        <td>${details['Responsabile Interno']}</td>
+                        <td>${details['Segnalazione interno ']}</td>
+                        <td>${details['Segnalazione Cliente']}</td>
+                        <td>${details.Soluzione}</td>
+                        <td>${details.Azione}</td>
+                    `;
+                    tableBody.appendChild(row);
+                }
+            }
+
+            // Destroy existing DataTable instance (if any)
+            if ($.fn.DataTable.isDataTable('#mon-tutti-table')) {
+                $('#mon-tutti-table').DataTable().destroy();
+            }
+
+            // Initialize DataTable
+            dataTable = $('#mon-tutti-table').DataTable({
+                dom: 'Bfrtip',
+                buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+                order: [[0, 'asc']], // Sort by Date column in ascending order
+                columnDefs: [
+                    { type: 'date', targets: 0 } // Enable date sorting on the first column
+                ]
+            });
+        }
+
+        // Prepare graph data
+        function prepareGraphData(potenzaImpianto) {
+            graphData = [];
+            const dates = Object.keys(ccTuttiData['Energia_kWh_giorno']);
+            
+            // Add Yield_KWh/Kwp_imp trace
+            graphData.push({
+                x: dates,
+                y: Object.values(ccTuttiData['Yield_KWh/Kwp_imp']),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Yield_KWh/Kwp_imp',
+                visible: ccTuttiVisibility['Yield_KWh/Kwp_imp']
+            });
+
+            // Add Yield_KWh/Kwp_giorno trace
+            graphData.push({
+                x: dates,
+                y: Object.values(ccTuttiData['Yield_KWh/Kwp_giorno']),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Yield_KWh/Kwp_giorno',
+                visible: ccTuttiVisibility['Yield_KWh/Kwp_giorno']
+            });
+
+            // Add Potenza_peak_KWp_giorno trace
+            graphData.push({
+                x: dates,
+                y: Object.values(ccTuttiData['Potenza_peak_KWp_giorno']),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Potenza_peak_KWp_giorno',
+                visible: ccTuttiVisibility['Potenza_peak_KWp_giorno']
+            });
+
+            // Add Energia_kWh_giorno trace
+            graphData.push({
+                x: dates,
+                y: Object.values(ccTuttiData['Energia_kWh_giorno']),
+                type: 'bar',
+                name: 'Energia_kWh_giorno',
+                visible: ccTuttiVisibility['Energia_kWh_giorno']
+            });
+
+            // Add Potenza_peak_KWp_giorno/kwp_installata trace
+            const potenzaPeak = Object.values(ccTuttiData['Potenza_peak_KWp_giorno']);
+            graphData.push({
+                x: dates,
+                y: potenzaPeak.map(value => value / potenzaImpianto),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Potenza_peak_KWp_giorno/kwp_installata',
+                visible: ccTuttiVisibility['Potenza_peak_KWp_giorno/kwp_installata']
+            });
+        }
+
+        // Update the graph
+        function updateGraph() {
+            const startDate = document.getElementById('graph-start-date').value;
+            const endDate = document.getElementById('graph-end-date').value;
+
+            let filteredDates = Object.keys(ccTuttiData['Energia_kWh_giorno']);
+            if (startDate && endDate) {
+                const startMoment = moment(startDate, 'YYYY-MM-DD');
+                const endMoment = moment(endDate, 'YYYY-MM-DD');
+                filteredDates = filteredDates.filter(date => {
+                    const dateMoment = moment(date, 'DD/MM/YYYY');
+                    return dateMoment.isBetween(startMoment, endMoment, null, '[]');
+                });
+            }
+
+            const filteredGraphData = graphData.map(trace => ({
+                ...trace,
+                x: filteredDates,
+                y: filteredDates.map(date => trace.y[Object.keys(ccTuttiData['Energia_kWh_giorno']).indexOf(date)])
+            }));
+
+            Plotly.newPlot('graph-container', filteredGraphData, {
+                title: 'CC-TUTTI Data',
+                xaxis: { title: 'Date' },
+                yaxis: { title: 'Value' },
+                showlegend: true
+            });
+        }
+
+        // Toggle curves on/off
+        function toggleCurve(curve) {
+            // Toggle the visibility state
+            visibleCurves[curve] = !visibleCurves[curve];
+            
+            // Update button appearance
+            const button = document.querySelector(`button[onclick="toggleCurve('${curve}')"]`);
+            if (button) {
+                button.style.opacity = visibleCurves[curve] ? '1' : '0.5';
+            }
+
+            // Update the graph data visibility
+            graphData.forEach(trace => {
+                // Convert trace name to match the curve keys in visibleCurves
+                const traceCurve = trace.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                if (traceCurve === curve) {
+                    trace.visible = visibleCurves[curve];
+                }
+            });
+
+            // Redraw the graph
+            updateGraph();
+        }
+
+        // Prepare data for monthly, yearly, and all-year sum graphs
+        function prepareData() {
+            const dataByMonth = {};
+            const dataByYear = {};
+            const allYearSum = {};
+
+            Object.entries(ccTuttiData['Energia_kWh_giorno']).forEach(([date, value]) => {
+                const [day, month, year] = date.split('/');
+                const monthYear = `${month}-${year}`;
+
+                // Monthly data
+                if (!dataByMonth[monthYear]) dataByMonth[monthYear] = [];
+                dataByMonth[monthYear].push({ date, value });
+
+                // Yearly data
+                if (!dataByYear[year]) dataByYear[year] = {};
+                if (!dataByYear[year][month]) dataByYear[year][month] = 0;
+                dataByYear[year][month] += value;
+
+                // All-year sum
+                if (!allYearSum[year]) allYearSum[year] = 0;
+                allYearSum[year] += value;
+            });
+
+            return { dataByMonth, dataByYear, allYearSum };
+        }
+
+        // Populate filters for monthly and yearly graphs
+        function populateFilters() {
+            const { dataByMonth, dataByYear } = prepareData();
+            const monthSelect = document.getElementById('month-select');
+            const yearSelectMonth = document.getElementById('year-select-month');
+            const yearSelectYear = document.getElementById('year-select-year');
+
+            // Clear existing options
+            monthSelect.innerHTML = '';
+            yearSelectMonth.innerHTML = '';
+            yearSelectYear.innerHTML = '';
+
+            // Populate months
+            const months = Object.keys(dataByMonth).sort();
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            });
+
+            // Populate years
+            const years = Object.keys(dataByYear).sort();
+            years.forEach(year => {
+                const optionMonth = document.createElement('option');
+                optionMonth.value = year;
+                optionMonth.textContent = year;
+                yearSelectMonth.appendChild(optionMonth);
+
+                const optionYear = document.createElement('option');
+                optionYear.value = year;
+                optionYear.textContent = year;
+                yearSelectYear.appendChild(optionYear);
+            });
+
+            // Set default selections
+            if (months.length > 0) monthSelect.value = months[0];
+            if (years.length > 0) {
+                yearSelectMonth.value = years[0];
+                yearSelectYear.value = years[0];
+            }
+        }
+
+        // Update monthly graph
+        function updateMonthlyGraph() {
+            const monthSelect = document.getElementById('month-select');
+            const yearSelect = document.getElementById('year-select-month');
+            const selectedMonth = monthSelect.value;
+            const selectedYear = yearSelect.value;
+            const { dataByMonth } = prepareData();
+            
+            const monthData = Object.entries(ccTuttiData['Energia_kWh_giorno'])
+                .filter(([date]) => {
+                    const [day, month, year] = date.split('/');
+                    return `${month}-${year}` === `${selectedMonth}`;
+                })
+                .map(([date, value]) => ({
+                    date,
+                    value
+                }));
+
+            if (monthData.length > 0) {
+                const trace = {
+                    x: monthData.map(d => d.date),
+                    y: monthData.map(d => d.value),
+                    type: 'bar',
+                    name: 'Energy (kWh)'
+                };
+
+                Plotly.newPlot('monthly-graph', [trace], {
+                    title: `Monthly Energy (kWh) - ${selectedMonth}`,
+                    xaxis: { title: 'Date' },
+                    yaxis: { title: 'Energy (kWh)' }
+                });
+            }
+        }
+
+        // Update yearly graph
+        function updateYearlyGraph() {
+            const yearSelect = document.getElementById('year-select-year');
+            const selectedYear = yearSelect.value;
+            const { dataByYear } = prepareData();
+            const yearlyData = dataByYear[selectedYear];
+
+            if (yearlyData) {
+                const months = Object.keys(yearlyData).sort((a, b) => parseInt(a) - parseInt(b));
+                const values = months.map(month => yearlyData[month]);
+
+                const trace = {
+                    x: months,
+                    y: values,
+                    type: 'bar',
+                    name: 'Energy (kWh)'
+                };
+
+                Plotly.newPlot('yearly-graph', [trace], {
+                    title: `Yearly Energy (kWh) - ${selectedYear}`,
+                    xaxis: { title: 'Month' },
+                    yaxis: { title: 'Energy (kWh)' }
+                });
+            }
+        }
+
+        // Render all-year sum graph
+        function renderAllYearSumGraph() {
+            const { allYearSum } = prepareData();
+            const years = Object.keys(allYearSum).sort();
+            const values = years.map(year => allYearSum[year]);
+
+            const trace = {
+                x: years,
+                y: values,
+                type: 'bar',
+                name: 'Energy (kWh)'
+            };
+
+            Plotly.newPlot('all-year-sum-graph', [trace], {
+                title: 'All-Year Sum Energy (kWh)',
+                xaxis: { title: 'Year' },
+                yaxis: { title: 'Energy (kWh)' }
+            });
+        }
+
+        // Filter functions for MON-TUTTI table
+        function filterToday() {
+            const today = moment().format('DD/MM/YYYY');
+            dataTable.search(today).draw();
+        }
+
+        function filterThisMonth() {
+            const thisMonth = moment().format('MM/YYYY');
+            dataTable.search(thisMonth).draw();
+        }
+
+        function filterThisYear() {
+            const thisYear = moment().format('YYYY');
+            dataTable.search(thisYear).draw();
+        }
+
+        function filterAll() {
+            dataTable.search('').draw();
+        }
+
+        function filterByDateRange() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            if (startDate && endDate) {
+                const start = moment(startDate);
+                const end = moment(endDate);
+                
+                $.fn.dataTable.ext.search.push(
+                    function(settings, data, dataIndex) {
+                        const date = moment(data[0], 'DD/MM/YYYY');
+                        return date.isBetween(start, end, null, '[]');
+                    }
+                );
+                
+                dataTable.draw();
+                $.fn.dataTable.ext.search.pop();
+            }
+        }
+
+        function applyColumnFilters() {
+            const filters = {
+                date: document.getElementById('filter-date').value,
+                stato: document.getElementById('filter-stato').value,
+                device: document.getElementById('filter-device').value,
+                responsabile: document.getElementById('filter-responsabile').value,
+                segnalazioneInterno: document.getElementById('filter-segnalazione-interno').value,
+                segnalazioneCliente: document.getElementById('filter-segnalazione-cliente').value,
+                soluzione: document.getElementById('filter-soluzione').value,
+                azione: document.getElementById('filter-azione').value
+            };
+
+            dataTable.columns().every(function(index) {
+                const column = this;
+                let filterValue = '';
+
+                switch(index) {
+                    case 0: filterValue = filters.date; break;
+                    case 1: filterValue = filters.stato; break;
+                    case 2: filterValue = filters.device; break;
+                    case 3: filterValue = filters.responsabile; break;
+                    case 4: filterValue = filters.segnalazioneInterno; break;
+                    case 5: filterValue = filters.segnalazioneCliente; break;
+                    case 6: filterValue = filters.soluzione; break;
+                    case 7: filterValue = filters.azione; break;
+                }
+
+                if (filterValue) {
+                    column.search(filterValue).draw();
+                }
+            });
+        }
+
+    
+        function renderStTuttiDashboard(stTuttiData, container) {
+            // Store the data in a global variable
+            currentStTuttiData = stTuttiData; 
+            
+            // Get current date and last 7 days
+            const currentDate = moment(getCurrentTimestamp());
+            const last7Days = Array.from({length: 8}, (_, i) => {
+                return currentDate.clone().subtract(i, 'days').format('DD/MM/YYYY');
+            });
+
+            const allDates = Object.keys(stTuttiData)
+                .map(date => moment(date, 'DD/MM/YYYY'))
+                .filter(date => date.isSameOrBefore(currentDate))
+                .sort((a, b) => b - a) // Sort in descending order (newest first)
+                .map(date => date.format('DD/MM/YYYY'));
+
+            // Create status cards for all available dates
+            const statusCardsHtml = `
+                <div class="status-section">
+                    <h3>Plant Status - History</h3>
+                    <div class="status-container">
+                        <button class="status-nav-btn prev" onclick="scrollStatusLeft()">&lt;</button>
+                        <button class="status-nav-btn next" onclick="scrollStatusRight()">&gt;</button>
+                        <div class="status-row" id="status-row">
+                            ${allDates.map(date => {
+                                const status = stTuttiData[date] || '✅';
+                                const isToday = date === currentDate.format('DD/MM/YYYY');
+                                return `
+                                    <div class="status-card ${isToday ? 'today' : ''}">
+                                        <div class="emoji">${status}</div>
+                                        <div class="date">${isToday ? 'Today' : date}</div>
+                                        <div class="description">${statusMap[status] || 'Normal Operation'}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Status legend
+            const legendHtml = `
+                <div class="status-section">
+                    <h3>Status Legend</h3>
+                    <div class="status-legend">
+                        ${Object.entries(statusMap).map(([emoji, description]) => `
+                            <div class="legend-item">
+                                <span class="emoji">${emoji}</span>
+                                <span>${description}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Add filter buttons and date range inputs
+            const filterHtml = `
+                <div class="status-filter">
+                    <button onclick="updateStatusDistribution('week')" class="filter-btn">Last Week</button>
+                    <button onclick="updateStatusDistribution('month')" class="filter-btn">Last Month</button>
+                    <button onclick="updateStatusDistribution('year')" class="filter-btn">Last Year</button>
+                    <button onclick="updateStatusDistribution('all')" class="filter-btn">All Time</button>
+                    <div class="date-range-inputs">
+                        <input type="date" id="status-start-date" placeholder="Start Date">
+                        <input type="date" id="status-end-date" placeholder="End Date">
+                        <button onclick="handleStatusDateRange()" class="filter-btn">Apply Range</button>
+                    </div>
+                </div>
+            `;
+
+            // Status Distribution section
+            const distributionHtml = `
+                <div class="status-section">
+                    <h3>Status Distribution</h3>
+                    ${filterHtml}
+                    <div id="status-distribution-content" class="yearly-stats">
+                        ${createStatusDistributionContent(stTuttiData)}
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML += statusCardsHtml + legendHtml + distributionHtml;
+
+            // Add active class to the "All Time" button by default
+            const allTimeButton = container.querySelector('.status-filter button:nth-child(4)');
+            if (allTimeButton) {
+                allTimeButton.classList.add('active');
+            }
+        }
+
+        // Add these functions after your existing JavaScript code
+        function scrollStatusLeft() {
+            const container = document.getElementById('status-row');
+            if (container) {
+                container.scrollBy({
+                    left: -200,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function scrollStatusRight() {
+            const container = document.getElementById('status-row');
+            if (container) {
+                container.scrollBy({
+                    left: 200,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Optional: Add keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('station-details').style.display !== 'none') {
+                if (e.key === 'ArrowLeft') {
+                    scrollStatusLeft();
+                } else if (e.key === 'ArrowRight') {
+                    scrollStatusRight();
+                }
+            }
+        });
+
+        // Add these new functions
+        // Create the content for status distribution
+
+
+        // Handler for the date range filter
+        function handleStatusDateRange() {
+            const data = currentStTuttiData;  // Changed from window.currentStTuttiData
+            if (!data) return;
+
+            const startDate = moment(document.getElementById('status-start-date').value);
+            const endDate = moment(document.getElementById('status-end-date').value);
+
+            if (startDate.isValid() && endDate.isValid()) {
+                // Remove active class from all period buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                document.getElementById('status-distribution-content').innerHTML = 
+                    createStatusDistributionContent(data, startDate, endDate);
+            } else {
+                alert('Please select valid start and end dates');
+            }
+        }
+
+        // Add this if you want to refresh the view every minute
+        setInterval(() => {
+            // Refresh your views here
+            if (document.getElementById('station-details').style.display !== 'none') {
+                // Only refresh if we're on the details page
+                updateStatusDistribution('all');  // or whatever default view you want
+            }
+        }, 60000);  // 60000 ms = 1 minute
+
+
+        // Update the distribution based on period selection
+        function updateStatusDistribution(period) {
+            const data = currentStTuttiData;  // Changed from window.currentStTuttiData
+            if (!data) return;
+
+            const now = moment('2025-02-14 15:19:26', 'YYYY-MM-DD HH:mm:ss');  // Use current timestamp
+            let startDate;
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Add active class to clicked button
+            const buttons = document.querySelectorAll('.status-filter button');
+            switch(period) {
+                case 'week':
+                    buttons[0].classList.add('active');
+                    startDate = now.clone().subtract(7, 'days');
+                    break;
+                case 'month':
+                    buttons[1].classList.add('active');
+                    startDate = now.clone().subtract(1, 'month');
+                    break;
+                case 'year':
+                    buttons[2].classList.add('active');
+                    startDate = now.clone().subtract(1, 'year');
+                    break;
+                default:
+                    buttons[3].classList.add('active');
+                    // 'all' - no date filtering
+                    document.getElementById('status-distribution-content').innerHTML = 
+                        createStatusDistributionContent(data);
+                    return;
+            }
+
+            document.getElementById('status-distribution-content').innerHTML = 
+                createStatusDistributionContent(data, startDate, now);
+        }
+
+        function renderDeviceDashboard(deviceData, container) {
+            // Render INVERTER section
+            if (deviceData['INVERTER-TUTTI']) {
+                const inverterSection = createRibbonSection(
+                    'Inverters',
+                    () => renderInverterSection(deviceData['INVERTER-TUTTI'])
+                );
+                container.appendChild(inverterSection);
+            }
+
+            // Render ALTRI section
+            if (deviceData['ALTRI']) {
+                const altriSection = createRibbonSection(
+                    'Other Devices',
+                    () => renderAltriSection(deviceData['ALTRI'])
+                );
+                container.appendChild(altriSection);
+            }
+
+            // Activate first ribbon by default
+            const firstRibbon = container.querySelector('.device-ribbon');
+            if (firstRibbon) {
+                firstRibbon.click();
+            }
+        }
+
+        function createRibbonSection(title, contentRenderer) {
+            const section = document.createElement('div');
+            section.className = 'device-section';
+
+            const ribbon = document.createElement('div');
+            ribbon.className = 'device-ribbon';
+            ribbon.innerHTML = `
+                <h3>${title}</h3>
+                <span class="toggle-icon">▼</span>
+            `;
+
+            const content = document.createElement('div');
+            content.className = 'device-content';
+
+            ribbon.addEventListener('click', () => {
+                const isActive = ribbon.classList.contains('active');
+                
+                // Close all other ribbons
+                document.querySelectorAll('.device-ribbon').forEach(r => {
+                    r.classList.remove('active');
+                    r.nextElementSibling.classList.remove('active');
+                });
+
+                if (!isActive) {
+                    ribbon.classList.add('active');
+                    content.classList.add('active');
+                    
+                    // Render content if not already rendered
+                    if (!content.children.length) {
+                        content.appendChild(contentRenderer());
+                    }
+                    
+                    // Refresh charts if they exist
+                    content.querySelectorAll('.device-chart').forEach(chart => {
+                        const chartId = chart.id;
+                        if (chartId && chart.innerHTML) {
+                            Plotly.relayout(chartId, {
+                                'xaxis.autorange': true,
+                                'yaxis.autorange': true
+                            });
+                        }
+                    });
+                }
+            });
+
+            section.appendChild(ribbon);
+            section.appendChild(content);
+            return section;
+        }
+
+
+        function getLatestMonth(deviceData) {
+            const months = Object.keys(deviceData).filter(key => key.match(/^\d{2}-\d{4}$/));
+            return months.sort().reverse()[0];
+        }
+
+        function renderInverterSection(inverterData) {
+            const section = document.createElement('div');
+            section.className = 'device-grid';
+            
+            Object.entries(inverterData).forEach(([invName, invData]) => {
+                const latestMonth = getLatestMonth(invData);
+                const latestData = invData[latestMonth];
+                const chartId = `chart-${invName.replace(/\s+/g, '-')}`;
+                
+                const card = document.createElement('div');
+                card.className = 'device-card';
+                card.innerHTML = `
+                    <h4>${invName}</h4>
+                    <div class="device-info">
+                        <div class="stat-item">
+                            <strong>Potenza(Kw):</strong> ${latestData['Potenza(Kw)']}
+                        </div>
+                        <div class="stat-item">
+                            <strong>Marca-modello:</strong> ${latestData['Marca -modello']}
+                        </div>
+                        <div class="stat-item">
+                            <strong>SN:</strong> ${latestData['SN']}
+                        </div>
+                        <div class="stat-item">
+                            <strong>Latest Data:</strong> ${latestMonth}
+                        </div>
+                    </div>
+                    <div id="${chartId}" class="device-chart"></div>
+                `;
+                
+                section.appendChild(card);
+                
+                // Create chart after DOM is updated
+                requestAnimationFrame(() => {
+                    createDeviceChart(invData, chartId);
+                });
+            });
+
+            return section;
+        }
+
+
+        function renderAltriSection(altriData) {
+            const section = document.createElement('div');
+            section.className = 'device-grid';
+            
+            Object.entries(altriData).forEach(([deviceName, deviceData]) => {
+                const card = document.createElement('div');
+                card.className = 'device-card';
+                card.innerHTML = `
+                    <h4>${deviceName}</h4>
+                    <div class="device-info">
+                        <div class="stat-item">
+                            <strong>Marca-modello:</strong> ${deviceData['Marca -modello']}
+                        </div>
+                        <div class="stat-item">
+                            <strong>SN:</strong> ${deviceData['SN']}
+                        </div>
+                    </div>
+                `;
+                section.appendChild(card);
+            });
+
+            return section;
+        }
+
+        function createDeviceChart(deviceData, chartId) {
+            const months = Object.keys(deviceData)
+                .filter(key => key.match(/^\d{2}-\d{4}$/))
+                .sort();
+            
+            const potenzaKw = deviceData[months[0]]['Potenza(Kw)'];
+            
+            const traces = [
+                {
+                    name: 'Energia mese(Kwh)',
+                    type: 'bar',
+                    x: months,
+                    y: months.map(month => deviceData[month]['Energia mese(Kwh)']),
+                },
+                {
+                    name: 'Energia mese PVGIS(Kwh)',
+                    type: 'bar',
+                    x: months,
+                    y: months.map(month => deviceData[month]['Energia mese PVGIS(Kwh)']),
+                },
+                {
+                    name: 'Energia mese(Kwh)/Potenza(Kw)',
+                    type: 'scatter',
+                    x: months,
+                    y: months.map(month => deviceData[month]['Energia mese(Kwh)'] / potenzaKw),
+                    yaxis: 'y2'
+                },
+                {
+                    name: 'Energia mese PVGIS(Kwh)/Potenza(Kw)',
+                    type: 'scatter',
+                    x: months,
+                    y: months.map(month => deviceData[month]['Energia mese PVGIS(Kwh)'] / potenzaKw),
+                    yaxis: 'y2'
+                }
+            ];
+
+            const layout = {
+                title: 'Monthly Energy Data',
+                barmode: 'group',
+                yaxis: {title: 'Energy (kWh)'},
+                yaxis2: {
+                    title: 'Energy/Power Ratio',
+                    overlaying: 'y',
+                    side: 'right'
+                },
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    y: -0.2
+                },
+                margin: {
+                    l: 50,
+                    r: 50,
+                    t: 40,
+                    b: 100
+                },
+                height: 400,
+                autosize: true
+            };
+
+            Plotly.newPlot(chartId, traces, layout, {responsive: true});
+        }
+
+
+        function formatGeneralInfo(data) {
+            return `
+                <div class="general-info">
+                    <!-- Basic Information -->
+                    <div class="info-section">
+                        <div class="info-section-title">Basic Information</div>
+                        <div class="info-section-content">
+                            <div class="info-grid">
+                                <div class="info-field">
+                                    <label class="info-label">Codice Stazione</label>
+                                    <div class="info-value">${data['Codice Stazione']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Stato Oggi</label>
+                                    <div class="status-value status-normal">${data['oggi']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Priorita</label>
+                                    <div class="status-value ${data['Urgenza'] === 'ALTO' ? 'status-high' : 'status-normal'}">${data['Urgenza']}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <div class="info-section">
+                        <div class="info-section-title">Technical Details</div>
+                        <div class="info-section-content">
+                            <div class="info-grid">
+                                <div class="info-field">
+                                    <label class="info-label">Potenza Impianto</label>
+                                    <div class="info-value">${data['Potenza Impianto']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Anno Entrata</label>
+                                    <div class="info-value">${data['Anno _Entrata']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">CTR</label>
+                                    <div class="info-value">${data['CTR']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Garanzia</label>
+                                    <div class="info-value">${data['Garanzia']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Manutenzione Entro</label>
+                                    <div class="info-value">${data['Promessa_entro']}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contract Information -->
+                    <div class="info-section">
+                        <div class="info-section-title">Contract Information</div>
+                        <div class="info-section-content">
+                            <div class="info-grid">
+                                <div class="info-field">
+                                    <label class="info-label">Nome Cliente</label>
+                                    <div class="info-value">${data['Nome_Cliente']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Inizio Contratto</label>
+                                    <div class="info-value">${data['Inizio_Contratto']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Fine Contratto</label>
+                                    <div class="info-value">${data['Fine_Contratto']}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="info-section">
+                        <div class="info-section-title">Contact Information</div>
+                        <div class="info-section-content">
+                            <div class="contact-grid">
+                                <div class="info-field">
+                                    <label class="info-label">Riferimento</label>
+                                    <div class="info-value">${data['Riferimento']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Email</label>
+                                    <div class="info-value">${data['Email']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Cell</label>
+                                    <div class="info-value">${data['Cell']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Indirizzo</label>
+                                    <div class="info-value">${data['Indrizzo']}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project Management -->
+                    <div class="info-section">
+                        <div class="info-section-title">Project Management</div>
+                        <div class="info-section-content">
+                            <div class="project-management-grid">
+                                <div class="info-field">
+                                    <label class="info-label">Project Manager</label>
+                                    <div class="info-value">${data['PM']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Portale Monitoraggio</label>
+                                    <div class="info-value">${data['Portale_Monitoraggio']}</div>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Cartella progetto</label>
+                                    <div class="path-value">
+                                        <span class="path-text">${data['Cartella progetto']}</span>
+                                        <button class="copy-btn" onclick="copyToClipboard('${data['Cartella progetto'].replace(/'/g, "\\'")}')">
+                                            Copy Path
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+
+
+    <!-- Add these before the closing </body> tag -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/datetime/1.5.1/js/dataTables.dateTime.min.js"></script>
+</body>
+</html>
