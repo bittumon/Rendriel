@@ -79,28 +79,24 @@ $(document).ready(function() {
     // Populate filter dropdowns
     function populateFilters(data) {
         const devices = [...new Set(data.map(item => item.device))];
-        const statuses = [...new Set(data.map(item => item.status))];
 
         const deviceFilter = $('#deviceFilter');
-        const statusFilter = $('#statusFilter');
 
         devices.forEach(device => {
             deviceFilter.append(`<option value="${device}">${device}</option>`);
-        });
-
-        statuses.forEach(status => {
-            statusFilter.append(`<option value="${status}">${status}</option>`);
         });
     }
 
     // Apply filters
     function applyFilters() {
         const deviceFilter = $('#deviceFilter').val();
-        const statusFilter = $('#statusFilter').val();
         const startDate = $('#startDate').val();
         const endDate = $('#endDate').val();
+        const activeStatusButtons = $('.status-button.active').map(function() {
+            return $(this).data('status');
+        }).get();
 
-        $.fn.dataTable.ext.search.pop(); // Remove previous filter
+        $.fn.dataTable.ext.search.pop();
         
         $.fn.dataTable.ext.search.push(
             function(settings, data, dataIndex) {
@@ -110,7 +106,7 @@ $(document).ready(function() {
                 const date = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
                 
                 const deviceMatch = !deviceFilter || device === deviceFilter;
-                const statusMatch = !statusFilter || status === statusFilter;
+                const statusMatch = !activeStatusButtons.length || activeStatusButtons.includes(status);
                 const dateMatch = (!startDate || date >= new Date(startDate)) &&
                                 (!endDate || date <= new Date(endDate));
 
@@ -122,11 +118,17 @@ $(document).ready(function() {
     }
 
     // Event listeners for filters
-    $('#deviceFilter, #statusFilter').on('change', applyFilters);
+    $('#deviceFilter').on('change', applyFilters);
     $('#startDate, #endDate').on('change', applyFilters);
 
+    // Event listeners for status buttons
+    $('.status-button').on('click', function() {
+        $(this).toggleClass('active');
+        applyFilters();
+    });
+
     // Add timestamp and user info
-    const timestamp = "2025-02-14 17:03:15"; // Using the provided timestamp
+    const timestamp = "2025-02-14 22:34:08"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
