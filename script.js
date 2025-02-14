@@ -1,14 +1,19 @@
 $(document).ready(function() {
     let dataTable;
     
-    // Function to fetch data from the API
+    // Function to fetch data from GitHub Pages
     async function fetchData() {
         try {
-            const response = await fetch('YOUR_API_ENDPOINT');
+            const response = await fetch('https://bittumon.github.io/rendriel/TUTTI-plant_data.json');
             const data = await response.json();
             return processMonTuttiData(data);
         } catch (error) {
             console.error('Error fetching data:', error);
+            $('.container').prepend(`
+                <div class="error-banner" style="margin-bottom: 20px; background: #ffe6e6; padding: 10px; border-radius: 4px; color: #ff0000;">
+                    Error loading data: ${error.message}
+                </div>
+            `);
             return [];
         }
     }
@@ -58,7 +63,13 @@ $(document).ready(function() {
             ],
             order: [[0, 'desc']],
             pageLength: 25,
-            dom: 'Bfrtip'
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "Showing 0 to 0 of 0 entries",
+                infoFiltered: "(filtered from _MAX_ total entries)"
+            }
         });
 
         // Populate filter dropdowns
@@ -89,13 +100,14 @@ $(document).ready(function() {
         const startDate = $('#startDate').val();
         const endDate = $('#endDate').val();
 
-        dataTable.draw();
-
+        $.fn.dataTable.ext.search.pop(); // Remove previous filter
+        
         $.fn.dataTable.ext.search.push(
             function(settings, data, dataIndex) {
                 const device = data[1];
                 const status = data[8];
-                const date = new Date(data[0].split('/').reverse().join('-'));
+                const dateParts = data[0].split('/');
+                const date = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
                 
                 const deviceMatch = !deviceFilter || device === deviceFilter;
                 const statusMatch = !statusFilter || status === statusFilter;
@@ -105,11 +117,22 @@ $(document).ready(function() {
                 return deviceMatch && statusMatch && dateMatch;
             }
         );
+
+        dataTable.draw();
     }
 
     // Event listeners for filters
     $('#deviceFilter, #statusFilter').on('change', applyFilters);
     $('#startDate, #endDate').on('change', applyFilters);
+
+    // Add timestamp and user info
+    const timestamp = "2025-02-14 17:03:15"; // Using the provided timestamp
+    $('.container').prepend(`
+        <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
+            <div>Current Time (UTC): ${timestamp}</div>
+            <div>User: bittumon</div>
+        </div>
+    `);
 
     // Initialize the table
     initializeDataTable();
