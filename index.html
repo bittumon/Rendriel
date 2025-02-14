@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://bittumon.github.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://code.jquery.com https://cdn.datatables.net; style-src 'self' 'unsafe-inline' https://cdn.datatables.net;">
     <title>MON-TUTTI Data Table</title>
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css" rel="stylesheet">
@@ -24,10 +23,23 @@
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .status-item {
+        .status-button {
             display: inline-block;
-            margin-right: 20px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #e9ecef;
+            color: #495057;
+            font-size: 14px;
+        }
+        .status-button.active {
+            background-color: #0d6efd;
+            color: white;
         }
         #monTuttiTable {
             width: 100%;
@@ -54,14 +66,14 @@
         
         <div class="status-legend">
             <h3>Status Legend:</h3>
-            <div class="status-item">❌ - Impianto Spento</div>
-            <div class="status-item">🌐 - Problema comunicazione</div>
-            <div class="status-item">🟪 - Impianto funziona con problemi</div>
-            <div class="status-item">🔵 - Dispositivi con problemi</div>
-            <div class="status-item">🚫 - Dispositivo spento</div>
-            <div class="status-item">⚡ - Isolamento Inverter</div>
-            <div class="status-item">❓ - Non vede sul portale Monitoraggio</div>
-            <div class="status-item">✅ - Funziona</div>
+            <button class="status-button" data-status="❌">❌ Impianto Spento</button>
+            <button class="status-button" data-status="🌐">🌐 Problema comunicazione</button>
+            <button class="status-button" data-status="🟪">🟪 Impianto funziona con problemi</button>
+            <button class="status-button" data-status="🔵">🔵 Dispositivi con problemi</button>
+            <button class="status-button" data-status="🚫">🚫 Dispositivo spento</button>
+            <button class="status-button" data-status="⚡">⚡ Isolamento Inverter</button>
+            <button class="status-button" data-status="❓">❓ Non vede sul portale Monitoraggio</button>
+            <button class="status-button" data-status="✅">✅ Funziona</button>
         </div>
 
         <div class="filters">
@@ -69,12 +81,6 @@
                 <label for="deviceFilter">Device:</label>
                 <select id="deviceFilter">
                     <option value="">All Devices</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="statusFilter">Status:</label>
-                <select id="statusFilter">
-                    <option value="">All Status</option>
                 </select>
             </div>
             <div class="filter-group date-range">
