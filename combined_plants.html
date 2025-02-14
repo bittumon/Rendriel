@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Combined Plants Data</title>
-    
+    <title>MON-TUTTI Data</title>
+
     <!-- Include required CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/datetime/1.4.1/css/dataTables.dateTime.min.css">
-    
+
     <!-- Include required JS -->
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
@@ -33,10 +33,13 @@
         thead input {
             width: 100%;
         }
+        .status-icon {
+            font-size: 1.2em;
+        }
     </style>
 </head>
 <body>
-    <h2>Combined Plants Data</h2>
+    <h2>MON-TUTTI Data</h2>
 
     <div style="margin: 20px 0;">
         <label for="min">Start Date:</label>
@@ -45,17 +48,23 @@
         <input type="text" id="max" name="max">
     </div>
 
-    <table id="combinedTable" class="display" style="width:100%">
+    <table id="monTuttiTable" class="display" style="width:100%">
         <thead>
             <tr>
                 <th>Date</th>
-                <th>Time</th>
-                <th>IMPIANTI</th>
-                <th>Power (kW)</th>
-                <th>Daily Energy (kWh)</th>
-                <th>Total Energy (kWh)</th>
+                <th>Device</th>
+                <th>Problemi</th>
+                <th>Segnalazione interno</th>
+                <th>Segnalazione Cliente</th>
+                <th>Soluzione</th>
+                <th>Responsabile Interno</th>
+                <th>Azione</th>
+                <th>Stato</th>
             </tr>
             <tr>
+                <th></th>
+                <th></th>
+                <th></th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -74,7 +83,7 @@
             function(settings, data, dataIndex) {
                 var min = minDate.val();
                 var max = maxDate.val();
-                var date = new Date(data[0]);
+                var date = moment(data[0], 'DD/MM/YYYY').toDate();
     
                 if (
                     (min === null && max === null) ||
@@ -91,61 +100,78 @@
         $(document).ready(function() {
             // Create date inputs
             minDate = new DateTime('#min', {
-                format: 'YYYY-MM-DD'
+                format: 'DD/MM/YYYY'
             });
             maxDate = new DateTime('#max', {
-                format: 'YYYY-MM-DD'
+                format: 'DD/MM/YYYY'
             });
 
-            // Fetch and process the JSON data
-            fetch('https://bittumon.github.io/rendriel/TUTTI-plant_data.json')
-                .then(response => response.json())
-                .then(data => {
-                    // Process the data to combine all plants
-                    let combinedData = [];
-                    for (let plant in data) {
-                        data[plant].forEach(record => {
-                            combinedData.push([
-                                record.Date,
-                                record.Time,
-                                plant, // Add plant name as IMPIANTI
-                                record.Power,
-                                record["Daily Energy"],
-                                record["Total Energy"]
-                            ]);
-                        });
+            // Sample data structure
+            const monTuttiData = {
+                "MON-TUTTI": {
+                    "DISP 1": {
+                        "01/04/2024": {
+                            "Problemi": 127,
+                            "Segnalazione interno ": 128,
+                            "Segnalazione Cliente": 129,
+                            "Soluzione": 130,
+                            "Responsabile Interno": 131,
+                            "Azione": 132,
+                            "stato": "🚫"
+                        },
+                        // ... other dates
                     }
+                }
+            };
 
-                    // Initialize DataTable
-                    var table = $('#combinedTable').DataTable({
-                        data: combinedData,
-                        dom: 'Bfrtip',
-                        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
-                        order: [[0, 'desc'], [1, 'desc']],
-                        initComplete: function() {
-                            // Apply column search
-                            this.api().columns().every(function() {
-                                var column = this;
-                                var title = $(column.header()).text();
-                                
-                                // Create input element
-                                var input = $('<input type="text" class="column-search" placeholder="Search ' + title + '" />')
-                                    .appendTo($(column.header()).empty())
-                                    .on('keyup change clear', function() {
-                                        if (column.search() !== this.value) {
-                                            column.search(this.value).draw();
-                                        }
-                                    });
+            // Process data for DataTable
+            let tableData = [];
+            const data = monTuttiData["MON-TUTTI"];
+            for (let device in data) {
+                for (let date in data[device]) {
+                    const record = data[device][date];
+                    tableData.push([
+                        date,
+                        device,
+                        record["Problemi"],
+                        record["Segnalazione interno "],
+                        record["Segnalazione Cliente"],
+                        record["Soluzione"],
+                        record["Responsabile Interno"],
+                        record["Azione"],
+                        record["stato"]
+                    ]);
+                }
+            }
+
+            // Initialize DataTable
+            var table = $('#monTuttiTable').DataTable({
+                data: tableData,
+                dom: 'Bfrtip',
+                buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+                order: [[0, 'desc']],
+                initComplete: function() {
+                    // Apply column search
+                    this.api().columns().every(function() {
+                        var column = this;
+                        var title = $(column.header()).text();
+                        
+                        // Create input element
+                        var input = $('<input type="text" class="column-search" placeholder="Search ' + title + '" />')
+                            .appendTo($(column.header()).empty())
+                            .on('keyup change clear', function() {
+                                if (column.search() !== this.value) {
+                                    column.search(this.value).draw();
+                                }
                             });
-                        }
                     });
+                }
+            });
 
-                    // Event listener for date range filtering
-                    $('#min, #max').on('change', function () {
-                        table.draw();
-                    });
-                })
-                .catch(error => console.error('Error loading data:', error));
+            // Event listener for date range filtering
+            $('#min, #max').on('change', function () {
+                table.draw();
+            });
         });
     </script>
 </body>
