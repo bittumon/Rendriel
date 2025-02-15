@@ -41,6 +41,25 @@
             background-color: #0d6efd;
             color: white;
         }
+        .time-buttons {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .time-button {
+            display: inline-block;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #e9ecef;
+            color: #495057;
+            font-size: 14px;
+        }
+        .time-button.active {
+            background-color: #0d6efd;
+            color: white;
+        }
         #monTuttiTable {
             width: 100%;
             background-color: white;
@@ -76,6 +95,13 @@
             <button class="status-button" data-status="✅">✅ Funziona</button>
         </div>
 
+        <div class="time-buttons">
+            <button class="time-button" data-period="week">This Week</button>
+            <button class="time-button" data-period="month">This Month</button>
+            <button class="time-button" data-period="year">This Year</button>
+            <button class="time-button" data-period="all">All</button>
+        </div>
+
         <div class="filters">
             <div class="filter-group">
                 <label for="deviceFilter">Device:</label>
@@ -96,6 +122,7 @@
                 <tr>
                     <th>Date</th>
                     <th>Device</th>
+                    <th>IMPIANTI</th>
                     <th>Problems</th>
                     <th>Internal Notification</th>
                     <th>Customer Notification</th>
