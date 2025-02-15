@@ -105,6 +105,10 @@ $(document).ready(function() {
         if (activeTimeButton) {
             const currentDate = new Date();
             switch (activeTimeButton) {
+                case 'today':
+                    startPeriodDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                    endPeriodDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                    break;
                 case 'week':
                     startPeriodDate = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
                     endPeriodDate = new Date(currentDate.setDate(currentDate.getDate() + 6));
@@ -166,7 +170,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-15 09:08:55"; // Using the provided timestamp
+    const timestamp = "2025-02-15 09:13:35"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
