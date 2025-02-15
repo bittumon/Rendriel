@@ -110,12 +110,14 @@ $(document).ready(function() {
                     endPeriodDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
                     break;
                 case 'week':
-                    const firstDayOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+                    const firstDayOfWeek = new Date(currentDate);
+                    firstDayOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
                     startPeriodDate = new Date(firstDayOfWeek.getFullYear(), firstDayOfWeek.getMonth(), firstDayOfWeek.getDate());
                     endPeriodDate = new Date(); // Current day
                     break;
                 case 'lastWeek':
-                    const firstDayOfLastWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay() - 7));
+                    const firstDayOfLastWeek = new Date(currentDate);
+                    firstDayOfLastWeek.setDate(currentDate.getDate() - currentDate.getDay() - 7);
                     startPeriodDate = new Date(firstDayOfLastWeek.getFullYear(), firstDayOfLastWeek.getMonth(), firstDayOfLastWeek.getDate());
                     endPeriodDate = new Date(firstDayOfLastWeek.getFullYear(), firstDayOfLastWeek.getMonth(), firstDayOfLastWeek.getDate() + 6);
                     break;
@@ -176,7 +178,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-15 10:15:00"; // Using the provided timestamp
+    const timestamp = "2025-02-15 10:23:08"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
