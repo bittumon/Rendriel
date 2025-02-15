@@ -110,8 +110,9 @@ $(document).ready(function() {
                     endPeriodDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
                     break;
                 case 'week':
-                    startPeriodDate = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
-                    endPeriodDate = new Date(currentDate.setDate(currentDate.getDate() + 6));
+                    const firstDayOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+                    startPeriodDate = new Date(firstDayOfWeek.getFullYear(), firstDayOfWeek.getMonth(), firstDayOfWeek.getDate());
+                    endPeriodDate = new Date(firstDayOfWeek.getFullYear(), firstDayOfWeek.getMonth(), firstDayOfWeek.getDate() + 6);
                     break;
                 case 'month':
                     startPeriodDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -170,7 +171,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-15 09:52:06"; // Using the provided timestamp
+    const timestamp = "2025-02-15 10:06:42"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
