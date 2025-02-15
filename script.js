@@ -129,6 +129,8 @@ $(document).ready(function() {
             }
         }
 
+        $.fn.dataTable.ext.search.pop();
+        
         $.fn.dataTable.ext.search.push(
             function(settings, data, dataIndex) {
                 const device = data[1];
@@ -168,7 +170,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-15 09:16:03"; // Using the provided timestamp
+    const timestamp = "2025-02-15 09:52:06"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
