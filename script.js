@@ -80,27 +80,54 @@ $(document).ready(function() {
                 info: "Showing _START_ to _END_ of _TOTAL_ entries",
                 infoEmpty: "Showing 0 to 0 of 0 entries",
                 infoFiltered: "(filtered from _MAX_ total entries)"
+            },
+            initComplete: function () {
+                // Apply the search
+                this.api().columns().every(function () {
+                    var that = this;
+                    $('input', this.footer()).on('keyup change', function () {
+                        if (that.search() !== this.value) {
+                            that
+                                .search(this.value)
+                                .draw();
+                        }
+                    });
+                });
             }
         });
 
-        // Populate filter dropdowns
-        populateFilters(data);
-    }
-
-    // Populate filter dropdowns
-    function populateFilters(data) {
-        const devices = [...new Set(data.map(item => item.device))];
-
-        const deviceFilter = $('#deviceFilter');
-
-        devices.forEach(device => {
-            deviceFilter.append(`<option value="${device}">${device}</option>`);
+        // Add column filters
+        $('#monTuttiTable tfoot th').each(function () {
+            var title = $(this).text();
+            $(this).html('<input type="text" placeholder="Search ' + title + '" />');
         });
+        
+        // Event listeners for status buttons
+        $('.status-button').on('click', function() {
+            $(this).toggleClass('active');
+            applyFilters();
+        });
+
+        // Event listeners for time period buttons
+        $('.time-button').on('click', function() {
+            $('.time-button').removeClass('active');
+            $(this).addClass('active');
+            applyFilters();
+        });
+
+        // Clear filter button
+        $('#clearFilter').on('click', function() {
+            $('#startDate').val('');
+            $('#endDate').val('');
+            $('.time-button').removeClass('active');
+            applyFilters();
+        });
+
+        applyFilters();
     }
 
     // Apply filters
     function applyFilters() {
-        const deviceFilter = $('#deviceFilter').val();
         const startDate = $('#startDate').val();
         const endDate = $('#endDate').val();
         const activeStatusButtons = $('.status-button.active').map(function() {
@@ -149,44 +176,25 @@ $(document).ready(function() {
         
         $.fn.dataTable.ext.search.push(
             function(settings, data, dataIndex) {
-                const device = data[3];
-                const status = data[2];
                 const dateParts = data[0].split('/');
                 const date = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+                const status = data[2];
                 
-                const deviceMatch = !deviceFilter || device === deviceFilter;
                 const statusMatch = !activeStatusButtons.length || activeStatusButtons.includes(status);
                 const dateMatch = (!startDate || date >= new Date(startDate)) &&
                                   (!endDate || date <= new Date(endDate));
                 const periodDateMatch = (!startPeriodDate || date >= startPeriodDate) &&
                                         (!endPeriodDate || date <= endPeriodDate);
                 
-                return deviceMatch && statusMatch && dateMatch && periodDateMatch;
+                return statusMatch && dateMatch && periodDateMatch;
             }
         );
 
         dataTable.draw();
     }
 
-    // Event listeners for filters
-    $('#deviceFilter').on('change', applyFilters);
-    $('#startDate, #endDate').on('change', applyFilters);
-
-    // Event listeners for status buttons
-    $('.status-button').on('click', function() {
-        $(this).toggleClass('active');
-        applyFilters();
-    });
-
-    // Event listeners for time period buttons
-    $('.time-button').on('click', function() {
-        $('.time-button').removeClass('active');
-        $(this).addClass('active');
-        applyFilters();
-    });
-
     // Add timestamp and user info
-    const timestamp = "2025-02-16 14:52:25"; // Using the provided timestamp
+    const timestamp = "2025-02-16 15:01:20"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
