@@ -21,29 +21,31 @@ $(document).ready(function() {
     // Process MON-TUTTI data from JSON
     function processMonTuttiData(data) {
         const monTuttiData = [];
-        const monTutti = data.data_first_set[0]['1']['MON-TUTTI'];
-        const impianti = data.data_first_set[0]['1']['IMPIANTI'];
+        const monTutti = data.data_first_set;
         
-        for (const impiantiId in monTutti) {
-            const deviceData = monTutti[impiantiId];
-            const impiantiName = impianti[impiantiId];
-            for (const device in deviceData) {
-                const deviceEntries = deviceData[device];
-                for (const date in deviceEntries) {
-                    const entry = deviceEntries[date];
-                    monTuttiData.push({
-                        date: date,
-                        id: impiantiId,
-                        device: device,
-                        impianti: impiantiName,
-                        problems: entry.Problemi,
-                        internalNotification: entry['Segnalazione interno '],
-                        customerNotification: entry['Segnalazione Cliente'],
-                        solution: entry.Soluzione,
-                        internalResponsible: entry['Responsabile Interno'],
-                        action: entry.Azione,
-                        status: entry.stato
-                    });
+        for (const entry of monTutti) {
+            for (const impiantiId in entry) {
+                const impianto = entry[impiantiId];
+                const impiantiName = impianto["IMPIANTI"];
+                const devices = impianto["MON-TUTTI"];
+                for (const device in devices) {
+                    const deviceEntries = devices[device];
+                    for (const date in deviceEntries) {
+                        const dataEntry = deviceEntries[date];
+                        monTuttiData.push({
+                            date: date,
+                            id: impiantiId,
+                            device: device,
+                            impianti: impiantiName,
+                            problems: dataEntry.Problemi,
+                            internalNotification: dataEntry['Segnalazione interno '],
+                            customerNotification: dataEntry['Segnalazione Cliente'],
+                            solution: dataEntry.Soluzione,
+                            internalResponsible: dataEntry['Responsabile Interno'],
+                            action: dataEntry.Azione,
+                            status: dataEntry.stato
+                        });
+                    }
                 }
             }
         }
@@ -184,7 +186,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-16 14:33:34"; // Using the provided timestamp
+    const timestamp = "2025-02-16 14:41:23"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
