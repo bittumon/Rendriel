@@ -117,13 +117,18 @@ $(document).ready(function() {
             applyFilters();
         });
 
+        // Apply date range and status filters on change of date inputs
+        $('#startDate, #endDate').on('change', function() {
+            applyFilters();
+        });
+
         applyFilters();
     }
 
     // Apply filters
     function applyFilters() {
-        const startDate = $('#startDate').val();
-        const endDate = $('#endDate').val();
+        const startDate = $('#startDate').val() ? new Date($('#startDate').val()) : null;
+        const endDate = $('#endDate').val() ? new Date($('#endDate').val()) : null;
         const activeStatusButtons = $('.status-button.active').map(function() {
             return $(this).data('status');
         }).get();
@@ -175,8 +180,8 @@ $(document).ready(function() {
                 const status = data[2];
                 
                 const statusMatch = !activeStatusButtons.length || activeStatusButtons.includes(status);
-                const dateMatch = (!startDate || date >= new Date(startDate)) &&
-                                  (!endDate || date <= new Date(endDate));
+                const dateMatch = (!startDate || date >= startDate) &&
+                                  (!endDate || date <= endDate);
                 const periodDateMatch = (!startPeriodDate || date >= startPeriodDate) &&
                                         (!endPeriodDate || date <= endPeriodDate);
                 
@@ -188,11 +193,12 @@ $(document).ready(function() {
     }
 
     // Add timestamp and user info
-    const timestamp = "2025-02-16 15:20:21"; // Using the provided timestamp
+    const timestamp = "2025-02-16 21:49:39"; // Using the provided timestamp
+    const userLogin = "bittumon"; // Using the provided user's login
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
-            <div>User: bittumon</div>
+            <div>User: ${userLogin}</div>
         </div>
     `);
 
