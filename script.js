@@ -85,7 +85,7 @@ $(document).ready(function() {
                 // Apply the search
                 this.api().columns().every(function () {
                     var that = this;
-                    $('input', this.footer()).on('keyup change', function () {
+                    $('input', this.header()).on('keyup change', function () {
                         if (that.search() !== this.value) {
                             that
                                 .search(this.value)
@@ -96,12 +96,6 @@ $(document).ready(function() {
             }
         });
 
-        // Add column filters
-        $('#monTuttiTable tfoot th').each(function () {
-            var title = $(this).text();
-            $(this).html('<input type="text" placeholder="Search ' + title + '" />');
-        });
-        
         // Event listeners for status buttons
         $('.status-button').on('click', function() {
             $(this).toggleClass('active');
@@ -194,7 +188,7 @@ $(document).ready(function() {
     }
 
     // Add timestamp and user info
-    const timestamp = "2025-02-16 15:01:20"; // Using the provided timestamp
+    const timestamp = "2025-02-16 15:07:58"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
