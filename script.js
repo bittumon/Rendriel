@@ -27,20 +27,24 @@ $(document).ready(function() {
         for (const impiantiId in monTutti) {
             const deviceData = monTutti[impiantiId];
             const impiantiName = impianti[impiantiId];
-            for (const date in deviceData) {
-                const entry = deviceData[date];
-                monTuttiData.push({
-                    date: date,
-                    id: impiantiId,
-                    impianti: impiantiName,
-                    problems: entry.Problemi,
-                    internalNotification: entry['Segnalazione interno '],
-                    customerNotification: entry['Segnalazione Cliente'],
-                    solution: entry.Soluzione,
-                    internalResponsible: entry['Responsabile Interno'],
-                    action: entry.Azione,
-                    status: entry.stato
-                });
+            for (const device in deviceData) {
+                const deviceEntries = deviceData[device];
+                for (const date in deviceEntries) {
+                    const entry = deviceEntries[date];
+                    monTuttiData.push({
+                        date: date,
+                        id: impiantiId,
+                        device: device,
+                        impianti: impiantiName,
+                        problems: entry.Problemi,
+                        internalNotification: entry['Segnalazione interno '],
+                        customerNotification: entry['Segnalazione Cliente'],
+                        solution: entry.Soluzione,
+                        internalResponsible: entry['Responsabile Interno'],
+                        action: entry.Azione,
+                        status: entry.stato
+                    });
+                }
             }
         }
         return monTuttiData;
@@ -56,6 +60,7 @@ $(document).ready(function() {
             columns: [
                 { data: 'date' },
                 { data: 'id' },
+                { data: 'device' },
                 { data: 'impianti' },
                 { data: 'problems' },
                 { data: 'internalNotification' },
@@ -142,8 +147,8 @@ $(document).ready(function() {
         
         $.fn.dataTable.ext.search.push(
             function(settings, data, dataIndex) {
-                const device = data[1];
-                const status = data[9];
+                const device = data[2];
+                const status = data[10];
                 const dateParts = data[0].split('/');
                 const date = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
                 
@@ -179,7 +184,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-16 14:25:21"; // Using the provided timestamp
+    const timestamp = "2025-02-16 14:30:42"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
