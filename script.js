@@ -127,12 +127,16 @@ $(document).ready(function() {
 
     // Apply filters
     function applyFilters() {
-        const startDate = $('#startDate').val() ? new Date($('#startDate').val()) : null;
-        const endDate = $('#endDate').val() ? new Date($('#endDate').val()) : null;
+        const startDateInput = $('#startDate').val();
+        const endDateInput = $('#endDate').val();
+        const startDate = startDateInput ? new Date(startDateInput) : null;
+        const endDate = endDateInput ? new Date(endDateInput) : null;
         const activeStatusButtons = $('.status-button.active').map(function() {
             return $(this).data('status');
         }).get();
         const activeTimeButton = $('.time-button.active').data('period');
+
+        console.log(`Applying filters with startDate: ${startDate}, endDate: ${endDate}, activeStatus: ${activeStatusButtons}, activeTimeButton: ${activeTimeButton}`);
 
         let startPeriodDate, endPeriodDate;
 
@@ -171,6 +175,8 @@ $(document).ready(function() {
             }
         }
 
+        console.log(`Applying period filter with startPeriodDate: ${startPeriodDate}, endPeriodDate: ${endPeriodDate}`);
+
         $.fn.dataTable.ext.search.pop();
         
         $.fn.dataTable.ext.search.push(
@@ -179,12 +185,16 @@ $(document).ready(function() {
                 const date = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
                 const status = data[2];
                 
+                console.log(`Row date: ${date}, status: ${status}`);
+
                 const statusMatch = !activeStatusButtons.length || activeStatusButtons.includes(status);
                 const dateMatch = (!startDate || date >= startDate) &&
                                   (!endDate || date <= endDate);
                 const periodDateMatch = (!startPeriodDate || date >= startPeriodDate) &&
                                         (!endPeriodDate || date <= endPeriodDate);
                 
+                console.log(`Status match: ${statusMatch}, Date match: ${dateMatch}, Period date match: ${periodDateMatch}`);
+
                 return statusMatch && dateMatch && periodDateMatch;
             }
         );
@@ -193,7 +203,7 @@ $(document).ready(function() {
     }
 
     // Add timestamp and user info
-    const timestamp = "2025-02-16 21:49:39"; // Using the provided timestamp
+    const timestamp = "2025-02-16 21:53:17"; // Using the provided timestamp
     const userLogin = "bittumon"; // Using the provided user's login
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
