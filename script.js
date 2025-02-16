@@ -35,6 +35,7 @@ $(document).ready(function() {
                         monTuttiData.push({
                             date: date,
                             id: impiantiId,
+                            status: dataEntry.stato,
                             device: device,
                             impianti: impiantiName,
                             problems: dataEntry.Problemi,
@@ -42,8 +43,7 @@ $(document).ready(function() {
                             customerNotification: dataEntry['Segnalazione Cliente'],
                             solution: dataEntry.Soluzione,
                             internalResponsible: dataEntry['Responsabile Interno'],
-                            action: dataEntry.Azione,
-                            status: dataEntry.stato
+                            action: dataEntry.Azione
                         });
                     }
                 }
@@ -62,6 +62,7 @@ $(document).ready(function() {
             columns: [
                 { data: 'date' },
                 { data: 'id' },
+                { data: 'status' },
                 { data: 'device' },
                 { data: 'impianti' },
                 { data: 'problems' },
@@ -69,8 +70,7 @@ $(document).ready(function() {
                 { data: 'customerNotification' },
                 { data: 'solution' },
                 { data: 'internalResponsible' },
-                { data: 'action' },
-                { data: 'status' }
+                { data: 'action' }
             ],
             order: [[0, 'desc']],
             pageLength: 25,
@@ -149,8 +149,8 @@ $(document).ready(function() {
         
         $.fn.dataTable.ext.search.push(
             function(settings, data, dataIndex) {
-                const device = data[2];
-                const status = data[10];
+                const device = data[3];
+                const status = data[2];
                 const dateParts = data[0].split('/');
                 const date = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
                 
@@ -186,7 +186,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-16 14:41:23"; // Using the provided timestamp
+    const timestamp = "2025-02-16 14:52:25"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
