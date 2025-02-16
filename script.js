@@ -22,15 +22,16 @@ $(document).ready(function() {
     function processMonTuttiData(data) {
         const monTuttiData = [];
         const monTutti = data.data_first_set[0]['1']['MON-TUTTI'];
-        const impiantiName = data.data_first_set[0]['1']['IMPIANTI'];
+        const impianti = data.data_first_set[0]['1']['IMPIANTI'];
         
-        for (const device in monTutti) {
-            const deviceData = monTutti[device];
+        for (const impiantiId in monTutti) {
+            const deviceData = monTutti[impiantiId];
+            const impiantiName = impianti[impiantiId];
             for (const date in deviceData) {
                 const entry = deviceData[date];
                 monTuttiData.push({
                     date: date,
-                    device: device,
+                    id: impiantiId,
                     impianti: impiantiName,
                     problems: entry.Problemi,
                     internalNotification: entry['Segnalazione interno '],
@@ -54,7 +55,7 @@ $(document).ready(function() {
             responsive: true,
             columns: [
                 { data: 'date' },
-                { data: 'device' },
+                { data: 'id' },
                 { data: 'impianti' },
                 { data: 'problems' },
                 { data: 'internalNotification' },
@@ -178,7 +179,7 @@ $(document).ready(function() {
     });
 
     // Add timestamp and user info
-    const timestamp = "2025-02-15 10:23:08"; // Using the provided timestamp
+    const timestamp = "2025-02-16 14:25:21"; // Using the provided timestamp
     $('.container').prepend(`
         <div class="info-banner" style="margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
             <div>Current Time (UTC): ${timestamp}</div>
